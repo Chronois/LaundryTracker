@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TIKET — Pelacak Laundry</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧺</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="app">
+
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark">🧺</span>
+      <div class="brand-text">
+        <h1>TIKET</h1>
+        <p>Pelacak laundry &mdash; pastikan semua kembali utuh</p>
+      </div>
+    </div>
+    <nav class="tabs" id="tabs">
+      <button class="tab-btn active" data-tab="batch">Batch</button>
+      <button class="tab-btn" data-tab="verify">Verifikasi</button>
+      <button class="tab-btn" data-tab="dashboard">Ringkasan</button>
+      <button class="tab-btn" data-tab="data">Data</button>
+    </nav>
+  </header>
+
+  <main class="content">
+
+    <!-- ============ TAB: BATCH ============ -->
+    <section class="tab-panel active" id="tab-batch">
+
+      <div class="panel-card form-card">
+        <div class="panel-card-head">
+          <h2>Batch baru</h2>
+          <span class="eyebrow">01 — Masukkan cucian</span>
+        </div>
+
+        <form id="batch-form" novalidate>
+          <div class="field-row">
+            <div class="field">
+              <label for="f-laundry-name">Tempat laundry</label>
+              <input type="text" id="f-laundry-name" placeholder="mis. Laundry Kilat Bersih" required>
+            </div>
+            <div class="field">
+              <label for="f-date-in">Tanggal masuk</label>
+              <input type="date" id="f-date-in" required>
+            </div>
+            <div class="field">
+              <label for="f-date-est">Estimasi selesai</label>
+              <input type="date" id="f-date-est">
+            </div>
+          </div>
+
+          <div class="field-full">
+            <label>Foto sebelum laundry</label>
+            <div class="photo-drop" id="photo-before-drop">
+              <input type="file" id="f-photo-before" accept="image/*" hidden>
+              <div class="photo-drop-empty" id="photo-before-empty">
+                <span class="photo-drop-icon">📷</span>
+                <span>Klik atau seret foto ke sini</span>
+                <span class="photo-drop-hint">.jpg .png .webp — otomatis dikompres</span>
+              </div>
+              <div class="photo-drop-preview" id="photo-before-preview" hidden>
+                <img id="photo-before-img" alt="Foto sebelum laundry">
+                <button type="button" class="photo-remove" id="photo-before-remove">Hapus foto</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="field-full">
+            <div class="items-head">
+              <label>Daftar barang</label>
+              <span class="items-count" id="items-count">0 barang</span>
+            </div>
+
+            <div class="item-add-row">
+              <input type="text" id="f-item-name" placeholder="Nama barang, mis. Kemeja putih garis">
+              <select id="f-item-tag">
+                <option value="baju">Baju</option>
+                <option value="kaos">Kaos</option>
+                <option value="kemeja">Kemeja</option>
+                <option value="celana">Celana</option>
+                <option value="celana_dalam">Celana dalam</option>
+                <option value="jaket">Jaket</option>
+                <option value="sprei">Sprei</option>
+                <option value="handuk">Handuk</option>
+                <option value="kaos_kaki">Kaos kaki</option>
+                <option value="lainnya">Lainnya</option>
+              </select>
+              <button type="button" id="f-item-add" class="btn btn-secondary">+ Tambah</button>
+            </div>
+
+            <ul class="item-list" id="item-list"></ul>
+            <p class="empty-hint" id="item-list-empty">Belum ada barang ditambahkan.</p>
+          </div>
+
+          <div class="field-full">
+            <label for="f-notes">Catatan (opsional)</label>
+            <input type="text" id="f-notes" placeholder="mis. jangan pakai pewangi, ada noda di kerah">
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary" id="btn-save-batch">Simpan batch</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="panel-card">
+        <div class="panel-card-head">
+          <h2>Semua batch</h2>
+          <div class="filter-chips" id="filter-chips">
+            <button class="chip active" data-filter="all">Semua</button>
+            <button class="chip" data-filter="diproses">Diproses</button>
+            <button class="chip" data-filter="selesai_lengkap">Selesai</button>
+            <button class="chip" data-filter="selesai_ada_hilang">Ada yang hilang</button>
+          </div>
+        </div>
+        <div class="ticket-list" id="ticket-list"></div>
+        <p class="empty-hint" id="ticket-list-empty" hidden>Belum ada batch laundry. Buat batch pertamamu di atas.</p>
+      </div>
+
+    </section>
+
+    <!-- ============ TAB: VERIFIKASI ============ -->
+    <section class="tab-panel" id="tab-verify">
+
+      <div class="panel-card">
+        <div class="panel-card-head">
+          <h2>Pilih batch untuk diverifikasi</h2>
+          <span class="eyebrow">02 — Cek saat cucian kembali</span>
+        </div>
+        <select id="verify-select" class="select-batch">
+          <option value="">— Pilih batch —</option>
+        </select>
+        <p class="empty-hint" id="verify-empty">Tidak ada batch yang sedang diproses.</p>
+      </div>
+
+      <div class="panel-card" id="verify-detail" hidden>
+        <div class="panel-card-head">
+          <h2 id="verify-title">—</h2>
+          <span class="stamp" id="verify-status-stamp">Diproses</span>
+        </div>
+
+        <div class="field-full">
+          <label>Foto sesudah laundry</label>
+          <div class="photo-drop" id="photo-after-drop">
+            <input type="file" id="f-photo-after" accept="image/*" hidden>
+            <div class="photo-drop-empty" id="photo-after-empty">
+              <span class="photo-drop-icon">📷</span>
+              <span>Klik atau seret foto ke sini</span>
+              <span class="photo-drop-hint">.jpg .png .webp — otomatis dikompres</span>
+            </div>
+            <div class="photo-drop-preview" id="photo-after-preview" hidden>
+              <img id="photo-after-img" alt="Foto sesudah laundry">
+              <button type="button" class="photo-remove" id="photo-after-remove">Hapus foto</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="photo-compare" id="photo-compare" hidden>
+          <div>
+            <span class="compare-label">Sebelum</span>
+            <img id="compare-before-img" alt="Sebelum">
+          </div>
+          <div>
+            <span class="compare-label">Sesudah</span>
+            <img id="compare-after-img" alt="Sesudah">
+          </div>
+        </div>
+
+        <div class="checklist-head">
+          <label>Checklist barang kembali</label>
+          <span id="checklist-progress">0 / 0 dicentang</span>
+        </div>
+        <ul class="checklist" id="checklist"></ul>
+
+        <div class="form-actions form-actions-split">
+          <button class="btn btn-ghost" id="btn-check-all">Centang semua</button>
+          <button class="btn btn-primary" id="btn-finish-verify">Selesaikan verifikasi</button>
+        </div>
+
+        <div class="missing-banner" id="missing-banner" hidden></div>
+      </div>
+
+    </section>
+
+    <!-- ============ TAB: DASHBOARD ============ -->
+    <section class="tab-panel" id="tab-dashboard">
+
+      <div class="panel-card">
+        <div class="panel-card-head">
+          <h2>Ringkasan</h2>
+          <span class="eyebrow">03 — In &amp; out</span>
+        </div>
+        <div class="stat-grid" id="stat-grid"></div>
+      </div>
+
+      <div class="panel-card">
+        <div class="panel-card-head">
+          <h2>Barang hilang</h2>
+        </div>
+        <ul class="missing-list" id="missing-list"></ul>
+        <p class="empty-hint" id="missing-list-empty">Tidak ada barang yang hilang. Aman.</p>
+      </div>
+
+      <div class="panel-card">
+        <div class="panel-card-head">
+          <h2>Akan dihapus otomatis</h2>
+        </div>
+        <ul class="expiry-list" id="expiry-list"></ul>
+        <p class="empty-hint" id="expiry-list-empty">Tidak ada batch yang akan dihapus dalam waktu dekat.</p>
+      </div>
+
+    </section>
+
+    <!-- ============ TAB: DATA ============ -->
+    <section class="tab-panel" id="tab-data">
+
+      <div class="panel-card">
+        <div class="panel-card-head">
+          <h2>Pengaturan</h2>
+          <span class="eyebrow">04 — Penyimpanan lokal</span>
+        </div>
+        <div class="field">
+          <label for="f-retention">Hapus otomatis batch selesai setelah (hari)</label>
+          <input type="number" id="f-retention" min="1" max="90" value="7">
+        </div>
+        <p class="hint-text">Hanya batch berstatus <strong>Selesai</strong> yang dihitung dan dihapus otomatis. Batch yang masih diproses tidak akan pernah dihapus otomatis.</p>
+      </div>
+
+      <div class="panel-card">
+        <div class="panel-card-head">
+          <h2>Cadangkan &amp; pulihkan</h2>
+        </div>
+        <p class="hint-text">Semua data tersimpan hanya di browser ini (localStorage). Ekspor secara berkala agar tidak hilang saat cache dibersihkan atau pindah perangkat.</p>
+        <div class="form-actions form-actions-split">
+          <button class="btn btn-secondary" id="btn-export">Ekspor data (.json)</button>
+          <label class="btn btn-secondary" for="f-import">Impor data (.json)</label>
+          <input type="file" id="f-import" accept="application/json" hidden>
+        </div>
+      </div>
+
+      <div class="panel-card panel-card-danger">
+        <div class="panel-card-head">
+          <h2>Hapus semua data</h2>
+        </div>
+        <p class="hint-text">Menghapus seluruh batch, barang, dan foto secara permanen dari browser ini.</p>
+        <button class="btn btn-danger" id="btn-clear-all">Hapus semua data</button>
+      </div>
+
+    </section>
+
+  </main>
+
+  <div class="toast" id="toast" hidden></div>
+</div>
+
+<script src="js/utils.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
