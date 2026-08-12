@@ -225,7 +225,8 @@ input[type="date"] { color-scheme: dark; }
 
 .item-add-row {
   display: grid;
-  grid-template-columns: 1fr 120px 90px 60px 90px;
+  /* Diperlebar 105px agar tombol Update muat tanpa bertumpuk */
+  grid-template-columns: 1fr 120px 90px 60px 105px;
   gap: 8px;
   margin-bottom: 12px;
 }
@@ -279,7 +280,13 @@ input[type="date"] { color-scheme: dark; }
   white-space: nowrap;
 }
 
-.item-remove {
+/* Edit & Delete Action Buttons for Items */
+.item-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.item-edit, .item-remove {
   background: none;
   border: none;
   color: var(--text-faint);
@@ -288,8 +295,11 @@ input[type="date"] { color-scheme: dark; }
   line-height: 1;
   padding: 4px 8px;
   min-height: 44px; /* Touch friendly */
+  transition: color 0.15s ease;
 }
+.item-edit:hover { color: var(--teal); }
 .item-remove:hover { color: var(--coral); }
+
 .empty-hint { color: var(--text-faint); font-size: 13px; margin: 4px 0 0; }
 
 /* ==================================================
