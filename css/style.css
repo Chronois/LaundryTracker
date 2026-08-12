@@ -387,7 +387,7 @@ input[type="date"] { color-scheme: dark; }
 }
 .ticket-meta span { font-family: var(--font-mono); }
 .ticket-tags { display: flex; gap: 6px; flex-wrap: wrap; }
-.ticket-actions { display: flex; gap: 8px; margin-top: auto; }
+.ticket-actions { display: flex; gap: 8px; margin-top: auto; flex-wrap: wrap; }
 .ticket-expiry { font-family: var(--font-mono); font-size: 11px; color: var(--brass); }
 
 /* ==================================================
