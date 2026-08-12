@@ -62,6 +62,9 @@
     btnClearAll: el('btn-clear-all'),
 
     toast: el('toast')
+    imageModal: el('image-modal'),
+    modalImg: el('modal-img'),
+    modalClose: el('modal-close')
   };
 
   // ---------- toast ----------
@@ -89,6 +92,30 @@
     activeVerifyId = batchId;
     renderVerifyDetail();
   }
+
+// ==================================================
+  // IMAGE ZOOM MODAL
+  // ==================================================
+  
+  // Menggunakan event delegation pada body agar semua gambar (termasuk yang baru ditambah) bisa diklik
+  document.body.addEventListener('click', (e) => {
+    if (e.target.classList.contains('item-thumb')) {
+      els.modalImg.src = e.target.src;
+      els.imageModal.hidden = false;
+    }
+  });
+
+  // Tutup saat tombol (X) diklik
+  els.modalClose.addEventListener('click', () => {
+    els.imageModal.hidden = true;
+  });
+
+  // Tutup saat area gelap di luar gambar diklik
+  els.imageModal.addEventListener('click', (e) => {
+    if (e.target === els.imageModal) {
+      els.imageModal.hidden = true;
+    }
+  });
 
   // ==================================================
   // BATCH FORM (1 Item 1 Photo)
