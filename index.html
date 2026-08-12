@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>TICKET — Laundry Tracker</title>
+<title>LaundryTracker</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧺</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,8 +18,8 @@
     <div class="brand">
       <span class="brand-mark">🧺</span>
       <div class="brand-text">
-        <h1>TICKET</h1>
-        <p>Laundry Tracker &mdash; ensure everything comes back</p>
+        <h1>LaundryTracker</h1>
+        <p>Ensure everything comes back</p>
       </div>
     </div>
     <nav class="tabs" id="tabs">
@@ -37,7 +37,7 @@
 
       <div class="panel-card form-card">
         <div class="panel-card-head">
-          <h2>New Batch</h2>
+          <h2 id="batch-form-title">New Batch</h2>
           <span class="eyebrow">01 — Drop off laundry</span>
         </div>
 
@@ -101,7 +101,8 @@
             <input type="text" id="f-notes" placeholder="e.g., Do not use fabric softener, stain on collar">
           </div>
 
-          <div class="form-actions">
+          <div class="form-actions" style="gap: 8px;">
+            <button type="button" class="btn btn-ghost" id="btn-cancel-edit" hidden>Cancel Edit</button>
             <button type="submit" class="btn btn-primary" id="btn-save-batch">Save Batch</button>
           </div>
         </form>
