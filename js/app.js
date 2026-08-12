@@ -10,7 +10,8 @@
   let currentDraftPhoto = null;
   let activeVerifyId = '';
   let activeFilter = 'all';
-  let editingBatchId = null; // Menandai jika sedang dalam mode edit
+  let editingBatchId = null; // Menandai jika sedang dalam mode edit batch
+  let editingItemId = null;  // Menandai jika sedang dalam mode edit item di dalam form
 
   // ---------- element refs ----------
   const el = (id) => document.getElementById(id);
@@ -157,10 +158,64 @@
         <img src="${item.photo}" class="item-thumb" alt="${item.name}">
         <span class="item-name">${Utils.escapeHtml(item.name)}</span>
         <span class="tag-pill">${Utils.tagLabel(item.tag)}</span>
-        <button type="button" class="item-remove" data-id="${item.id}" aria-label="Remove item">✕</button>
+        <div class="item-actions">
+          <button type="button" class="item-edit" data-id="${item.id}" aria-label="Edit item">✎</button>
+          <button type="button" class="item-remove" data-id="${item.id}" aria-label="Remove item">✕</button>
+        </div>
       `;
       els.itemList.appendChild(li);
     });
+  }
+
+  els.itemList.addEventListener('click', (e) => {
+    const btnRemove = e.target.closest('.item-remove');
+    const btnEdit = e.target.closest('.item-edit');
+
+    if (btnRemove) {
+      if (editingItemId === btnRemove.dataset.id) {
+        cancelItemEdit();
+      }
+      draftItems = draftItems.filter(i => i.id !== btnRemove.dataset.id);
+      renderDraftItems();
+    } else if (btnEdit) {
+      startItemEdit(btnEdit.dataset.id);
+    }
+  });
+
+  // Setup form fields to edit an item
+  function startItemEdit(id) {
+    const item = draftItems.find(i => i.id === id);
+    if (!item) return;
+
+    editingItemId = id;
+    els.itemName.value = item.name;
+    els.itemTag.value = item.tag;
+    currentDraftPhoto = item.photo;
+
+    // UI Updates
+    els.photoBtnText.textContent = '✓ OK';
+    els.lblItemPhoto.style.borderColor = 'var(--teal)';
+    els.lblItemPhoto.style.color = 'var(--teal)';
+    els.lblItemCamera.style.borderColor = 'var(--teal)';
+    els.lblItemCamera.style.color = 'var(--teal)';
+    
+    els.itemAdd.textContent = '✓ Update';
+    els.itemName.focus();
+  }
+
+  // Clear item form
+  function cancelItemEdit() {
+    editingItemId = null;
+    els.itemName.value = '';
+    currentDraftPhoto = null;
+    els.itemPhotoInput.value = '';
+    els.itemCameraInput.value = '';
+    els.photoBtnText.textContent = 'File';
+    els.lblItemPhoto.style.borderColor = '';
+    els.lblItemPhoto.style.color = '';
+    els.lblItemCamera.style.borderColor = '';
+    els.lblItemCamera.style.color = '';
+    els.itemAdd.textContent = '+ Add';
   }
 
   els.itemAdd.addEventListener('click', addDraftItem);
@@ -179,37 +234,30 @@
       return;
     }
 
-    draftItems.push({ 
-      id: Utils.uid('item'), 
-      name, 
-      tag: els.itemTag.value, 
-      photo: currentDraftPhoto,
-      checked: false 
-    });
+    if (editingItemId) {
+      // Update existing
+      const idx = draftItems.findIndex(i => i.id === editingItemId);
+      if (idx !== -1) {
+        draftItems[idx].name = name;
+        draftItems[idx].tag = els.itemTag.value;
+        draftItems[idx].photo = currentDraftPhoto;
+      }
+    } else {
+      // Add new
+      draftItems.push({ 
+        id: Utils.uid('item'), 
+        name, 
+        tag: els.itemTag.value, 
+        photo: currentDraftPhoto,
+        checked: false 
+      });
+    }
     
-    // Reset inputs
-    els.itemName.value = '';
-    currentDraftPhoto = null;
-    els.itemPhotoInput.value = '';
-    els.itemCameraInput.value = '';
-    els.photoBtnText.textContent = 'File';
-    els.lblItemPhoto.style.borderColor = '';
-    els.lblItemPhoto.style.color = '';
-    els.lblItemCamera.style.borderColor = '';
-    els.lblItemCamera.style.color = '';
-    
-    els.itemName.focus();
+    cancelItemEdit();
     renderDraftItems();
   }
 
-  els.itemList.addEventListener('click', (e) => {
-    const btn = e.target.closest('.item-remove');
-    if (!btn) return;
-    draftItems = draftItems.filter(i => i.id !== btn.dataset.id);
-    renderDraftItems();
-  });
-
-  // Handle Main Form Submission (Create or Edit)
+  // Handle Main Form Submission (Create or Edit Batch)
   els.batchForm.addEventListener('submit', (e) => {
     e.preventDefault();
     const laundryName = els.laundryName.value.trim();
@@ -260,14 +308,8 @@
     els.batchForm.reset();
     els.dateIn.value = Utils.todayISO();
     draftItems = [];
-    currentDraftPhoto = null;
-    els.itemPhotoInput.value = '';
-    els.itemCameraInput.value = '';
-    els.photoBtnText.textContent = 'File';
-    els.lblItemPhoto.style.borderColor = '';
-    els.lblItemPhoto.style.color = '';
-    els.lblItemCamera.style.borderColor = '';
-    els.lblItemCamera.style.color = '';
+    
+    cancelItemEdit();
     
     editingBatchId = null;
     els.batchFormTitle.textContent = 'New Batch';
