@@ -13,6 +13,10 @@
   let editingBatchId = null;
   let editingItemId = null;
 
+  // Calendar State
+  let currentCalDate = new Date();
+  let targetDateField = null;
+
   // ---------- element refs ----------
   const el = (id) => document.getElementById(id);
 
@@ -75,7 +79,24 @@
     // Elements for Modal Zoom
     imageModal: el('image-modal'),
     modalImg: el('modal-img'),
-    modalClose: el('modal-close')
+    modalClose: el('modal-close'),
+
+    // Custom Prompt
+    promptModal: el('prompt-modal'),
+    promptTitle: el('prompt-title'),
+    promptText: el('prompt-text'),
+    promptInput: el('prompt-input'),
+    btnPromptCancel: el('btn-prompt-cancel'),
+    btnPromptConfirm: el('btn-prompt-confirm'),
+
+    // Custom Calendar
+    calendarModal: el('calendar-modal'),
+    calMonthYear: el('cal-month-year'),
+    calPrev: el('cal-prev'),
+    calNext: el('cal-next'),
+    calDays: el('calendar-days'),
+    calClear: el('cal-clear'),
+    calToday: el('cal-today')
   };
 
   // ---------- toast ----------
@@ -114,15 +135,135 @@
     }
   });
 
-  els.modalClose.addEventListener('click', () => {
-    els.imageModal.hidden = true;
+  els.modalClose.addEventListener('click', () => els.imageModal.hidden = true);
+  els.imageModal.addEventListener('click', (e) => {
+    if (e.target === els.imageModal) els.imageModal.hidden = true;
   });
 
-  els.imageModal.addEventListener('click', (e) => {
-    if (e.target === els.imageModal) {
-      els.imageModal.hidden = true;
-    }
+  // ==================================================
+  // CUSTOM PROMPT MODAL
+  // ==================================================
+  function openCustomPrompt(title, text, defaultValue, onConfirm) {
+    els.promptTitle.textContent = title;
+    els.promptText.textContent = text;
+    els.promptInput.value = defaultValue;
+    els.promptModal.hidden = false;
+    els.promptInput.focus();
+
+    const handleConfirm = () => {
+      const val = els.promptInput.value;
+      els.promptModal.hidden = true;
+      cleanup();
+      onConfirm(val);
+    };
+
+    const handleCancel = () => {
+      els.promptModal.hidden = true;
+      cleanup();
+    };
+
+    const cleanup = () => {
+      els.btnPromptConfirm.removeEventListener('click', handleConfirm);
+      els.btnPromptCancel.removeEventListener('click', handleCancel);
+    };
+
+    els.btnPromptConfirm.addEventListener('click', handleConfirm);
+    els.btnPromptCancel.addEventListener('click', handleCancel);
+  }
+
+  els.promptModal.addEventListener('click', (e) => {
+    if (e.target === els.promptModal) els.promptModal.hidden = true;
   });
+
+
+  // ==================================================
+  // CUSTOM CALENDAR MODAL
+  // ==================================================
+  function renderCalendar() {
+    const year = currentCalDate.getFullYear();
+    const month = currentCalDate.getMonth();
+    
+    const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    els.calMonthYear.textContent = `${monthNames[month]} ${year}`;
+    
+    els.calDays.innerHTML = '';
+    
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const today = new Date();
+
+    // Empty spots for preceding days
+    for (let i = 0; i < firstDay; i++) {
+      els.calDays.appendChild(document.createElement('div'));
+    }
+
+    // Actual days
+    for (let i = 1; i <= daysInMonth; i++) {
+      const dayEl = document.createElement('div');
+      dayEl.className = 'calendar-day';
+      dayEl.textContent = i;
+      
+      const isToday = i === today.getDate() && month === today.getMonth() && year === today.getFullYear();
+      if (isToday) dayEl.classList.add('today');
+
+      if (targetDateField && targetDateField.value) {
+        const [ty, tm, td] = targetDateField.value.split('-');
+        if (i === parseInt(td, 10) && month === parseInt(tm, 10) - 1 && year === parseInt(ty, 10)) {
+          dayEl.classList.add('selected');
+        }
+      }
+
+      dayEl.addEventListener('click', () => {
+        const m = String(month + 1).padStart(2, '0');
+        const d = String(i).padStart(2, '0');
+        if (targetDateField) targetDateField.value = `${year}-${m}-${d}`;
+        els.calendarModal.hidden = true;
+      });
+
+      els.calDays.appendChild(dayEl);
+    }
+  }
+
+  function openCalendar(inputEl) {
+    targetDateField = inputEl;
+    const val = inputEl.value;
+    if (val) {
+      const [y, m, d] = val.split('-');
+      currentCalDate = new Date(y, m - 1, d);
+    } else {
+      currentCalDate = new Date();
+    }
+    renderCalendar();
+    els.calendarModal.hidden = false;
+  }
+
+  els.dateIn.addEventListener('click', () => openCalendar(els.dateIn));
+  els.dateEst.addEventListener('click', () => openCalendar(els.dateEst));
+
+  els.calPrev.addEventListener('click', () => {
+    currentCalDate.setMonth(currentCalDate.getMonth() - 1);
+    renderCalendar();
+  });
+
+  els.calNext.addEventListener('click', () => {
+    currentCalDate.setMonth(currentCalDate.getMonth() + 1);
+    renderCalendar();
+  });
+
+  els.calToday.addEventListener('click', () => {
+    currentCalDate = new Date();
+    renderCalendar();
+  });
+
+  els.calClear.addEventListener('click', () => {
+    if (targetDateField) targetDateField.value = '';
+    els.calendarModal.hidden = true;
+  });
+
+  els.calendarModal.addEventListener('click', (e) => {
+    if (e.target === els.calendarModal) els.calendarModal.hidden = true;
+  });
+
 
   // ==================================================
   // GLOBAL SETTINGS (Header Actions)
@@ -130,21 +271,19 @@
   
   els.btnRetention.addEventListener('click', () => {
     const currentDays = settings.retentionDays || 7;
-    const input = prompt('Auto-delete completed batches after how many days?', currentDays);
-    
-    if (input === null) return; // User cancelled
-    
-    let v = parseInt(input, 10);
-    if (isNaN(v) || v < 1) {
-      showToast('Invalid input. Please enter a valid number of days.');
-      return;
-    }
-    
-    settings.retentionDays = v;
-    Storage.saveSettings(settings);
-    renderTicketList();
-    renderDashboard();
-    showToast(`Auto-delete set to ${v} days.`);
+    openCustomPrompt('Auto-delete Settings', 'Auto-delete completed batches after how many days?', currentDays, (input) => {
+      if (!input) return;
+      let v = parseInt(input, 10);
+      if (isNaN(v) || v < 1) {
+        showToast('Invalid input. Please enter a valid number of days.');
+        return;
+      }
+      settings.retentionDays = v;
+      Storage.saveSettings(settings);
+      renderTicketList();
+      renderDashboard();
+      showToast(`Auto-delete set to ${v} days.`);
+    });
   });
 
   els.btnExport.addEventListener('click', () => {
