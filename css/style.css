@@ -93,11 +93,11 @@ h1, h2, h3 { font-family: var(--font-display); margin: 0; }
   border: 1px solid var(--border);
   border-radius: var(--radius-m);
   padding: 4px;
-  width: 100%; /* Diubah dari fit-content menjadi 100% */
+  width: 100%;
 }
 
 .tab-btn {
-  flex: 1; /* Ditambahkan agar setiap tombol membagi ruang sama besar ke samping */
+  flex: 1;
   font-family: var(--font-mono);
   font-size: 12.5px;
   letter-spacing: 0.03em;
@@ -225,7 +225,7 @@ input[type="date"] { color-scheme: dark; }
 
 .item-add-row {
   display: grid;
-  grid-template-columns: 1fr 130px 110px 100px;
+  grid-template-columns: 1fr 120px 90px 60px 90px;
   gap: 8px;
   margin-bottom: 12px;
 }
@@ -536,8 +536,11 @@ input[type="date"] { color-scheme: dark; }
    ================================================== */
 @media (max-width: 700px) {
   .field-row { grid-template-columns: 1fr; }
-  .item-add-row { grid-template-columns: 1fr 1fr; }
-  #f-item-name { grid-column: span 2; }
+  
+  /* Grid form input barang disesuaikan agar rapi di layar kecil */
+  .item-add-row { grid-template-columns: 1fr 60px 1fr; }
+  #f-item-name { grid-column: span 3; }
+  #f-item-tag { grid-column: span 3; }
   
   .topbar { padding-top: 18px; }
   .tabs { width: 100%; overflow-x: auto; }
