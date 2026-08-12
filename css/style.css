@@ -57,7 +57,7 @@ h1, h2, h3 { font-family: var(--font-display); margin: 0; }
 }
 
 /* ==================================================
-   Topbar
+   Topbar & Header Actions
    ================================================== */
 .topbar {
   position: sticky;
@@ -68,6 +68,14 @@ h1, h2, h3 { font-family: var(--font-display); margin: 0; }
   display: flex;
   flex-direction: column;
   gap: 18px;
+}
+
+.topbar-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  width: 100%;
+  gap: 10px;
 }
 
 .brand { display: flex; align-items: center; gap: 14px; }
@@ -85,6 +93,40 @@ h1, h2, h3 { font-family: var(--font-display); margin: 0; }
 
 .brand-text h1 { font-size: 22px; letter-spacing: 0.14em; font-weight: 700; }
 .brand-text p { margin: 2px 0 0; font-size: 12.5px; color: var(--text-dim); }
+
+.header-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.icon-btn {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  border-radius: var(--radius-s);
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.icon-btn:hover {
+  color: var(--teal);
+  border-color: var(--teal);
+  background: var(--teal-dim);
+}
+
+.icon-btn.danger-icon:hover {
+  color: var(--coral);
+  border-color: var(--coral);
+  background: var(--coral-dim);
+}
 
 .tabs {
   display: flex;
@@ -138,13 +180,7 @@ h1, h2, h3 { font-family: var(--font-display); margin: 0; }
   margin-bottom: 16px;
 }
 .panel-card-head h2 { font-size: 17px; }
-.eyebrow {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--text-faint);
-}
+
 .hint-text { color: var(--text-dim); font-size: 13.5px; line-height: 1.5; margin: 0 0 14px; }
 
 /* ==================================================
@@ -225,7 +261,6 @@ input[type="date"] { color-scheme: dark; }
 
 .item-add-row {
   display: grid;
-  /* Diperlebar 105px agar tombol Update muat tanpa bertumpuk */
   grid-template-columns: 1fr 120px 90px 60px 105px;
   gap: 8px;
   margin-bottom: 12px;
@@ -545,6 +580,14 @@ input[type="date"] { color-scheme: dark; }
    Responsive
    ================================================== */
 @media (max-width: 700px) {
+  .topbar-top {
+    flex-direction: column;
+    gap: 14px;
+  }
+  .header-actions {
+    justify-content: flex-start;
+  }
+
   .field-row { grid-template-columns: 1fr; }
   
   /* Grid form input barang disesuaikan agar rapi di layar kecil */
