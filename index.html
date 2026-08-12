@@ -56,11 +56,13 @@
             </div>
             <div class="field">
               <label for="f-date-in">Date In</label>
-              <input type="date" id="f-date-in" required>
+              <!-- Diubah menjadi text readonly agar memicu kalender kustom -->
+              <input type="text" id="f-date-in" class="date-picker-input" placeholder="YYYY-MM-DD" readonly required>
             </div>
             <div class="field">
               <label for="f-date-est">Est. Completion</label>
-              <input type="date" id="f-date-est">
+              <!-- Diubah menjadi text readonly agar memicu kalender kustom -->
+              <input type="text" id="f-date-est" class="date-picker-input" placeholder="YYYY-MM-DD" readonly>
             </div>
           </div>
 
@@ -201,6 +203,40 @@
   <div id="image-modal" class="modal" hidden>
     <span class="modal-close" id="modal-close">&times;</span>
     <img id="modal-img" class="modal-content" alt="Zoomed Image">
+  </div>
+
+  <!-- Custom Prompt Modal (Auto Delete) -->
+  <div id="prompt-modal" class="modal" hidden>
+    <div class="modal-card">
+      <h3 id="prompt-title">Auto-delete Settings</h3>
+      <p id="prompt-text">Auto-delete completed batches after how many days?</p>
+      <input type="number" id="prompt-input" min="1" max="90" class="prompt-input-field">
+      <div class="modal-actions form-actions form-actions-split">
+        <button id="btn-prompt-cancel" class="btn btn-ghost">Cancel</button>
+        <button id="btn-prompt-confirm" class="btn btn-primary">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Custom Calendar Modal -->
+  <div id="calendar-modal" class="modal" hidden>
+    <div class="calendar-card">
+      <div class="calendar-header">
+        <button id="cal-prev" class="icon-btn">&larr;</button>
+        <span id="cal-month-year">August 2026</span>
+        <button id="cal-next" class="icon-btn">&rarr;</button>
+      </div>
+      <div class="calendar-weekdays">
+        <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+      </div>
+      <div id="calendar-days" class="calendar-days">
+        <!-- Hari akan disuntikkan lewat JS -->
+      </div>
+      <div class="calendar-actions form-actions form-actions-split">
+        <button id="cal-clear" class="btn btn-ghost">Clear</button>
+        <button id="cal-today" class="btn btn-primary">Today</button>
+      </div>
+    </div>
   </div>
 
 </div>
