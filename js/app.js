@@ -27,7 +27,9 @@
     itemName: el('f-item-name'),
     itemTag: el('f-item-tag'),
     itemPhotoInput: el('f-item-photo'),
+    itemCameraInput: el('f-item-camera'),
     lblItemPhoto: el('lbl-item-photo'),
+    lblItemCamera: el('lbl-item-camera'),
     photoBtnText: el('photo-btn-text'),
     itemAdd: el('f-item-add'),
     itemList: el('item-list'),
@@ -119,9 +121,8 @@
   // BATCH FORM (1 Item 1 Photo)
   // ==================================================
 
-  // Handle Photo Selection
-  els.itemPhotoInput.addEventListener('change', async (e) => {
-    const file = e.target.files[0];
+  // Fungsi pengolahan gambar (Untuk File maupun Kamera)
+  async function processPhotoSelection(file) {
     if (!file) return;
     
     els.photoBtnText.textContent = '...';
@@ -129,12 +130,18 @@
       currentDraftPhoto = await Utils.compressImage(file, 600, 0.7);
       els.lblItemPhoto.style.borderColor = 'var(--teal)';
       els.lblItemPhoto.style.color = 'var(--teal)';
+      els.lblItemCamera.style.borderColor = 'var(--teal)';
+      els.lblItemCamera.style.color = 'var(--teal)';
       els.photoBtnText.textContent = '✓ OK';
     } catch (err) {
       showToast('Failed to process photo: ' + err.message);
-      els.photoBtnText.textContent = 'Photo';
+      els.photoBtnText.textContent = 'File';
     }
-  });
+  }
+
+  // Handle Photo Selection (Gallery & Camera)
+  els.itemPhotoInput.addEventListener('change', (e) => processPhotoSelection(e.target.files[0]));
+  els.itemCameraInput.addEventListener('change', (e) => processPhotoSelection(e.target.files[0]));
 
   function renderDraftItems() {
     els.itemList.innerHTML = '';
@@ -181,9 +188,12 @@
     els.itemName.value = '';
     currentDraftPhoto = null;
     els.itemPhotoInput.value = '';
-    els.photoBtnText.textContent = 'Photo';
+    els.itemCameraInput.value = '';
+    els.photoBtnText.textContent = 'File';
     els.lblItemPhoto.style.borderColor = '';
     els.lblItemPhoto.style.color = '';
+    els.lblItemCamera.style.borderColor = '';
+    els.lblItemCamera.style.color = '';
     
     els.itemName.focus();
     renderDraftItems();
@@ -230,9 +240,13 @@
     els.dateIn.value = Utils.todayISO();
     draftItems = [];
     currentDraftPhoto = null;
-    els.photoBtnText.textContent = 'Photo';
+    els.itemPhotoInput.value = '';
+    els.itemCameraInput.value = '';
+    els.photoBtnText.textContent = 'File';
     els.lblItemPhoto.style.borderColor = '';
     els.lblItemPhoto.style.color = '';
+    els.lblItemCamera.style.borderColor = '';
+    els.lblItemCamera.style.color = '';
     renderDraftItems();
   }
 
