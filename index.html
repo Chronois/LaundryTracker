@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TIKET — Pelacak Laundry</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>TICKET — Laundry Tracker</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧺</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,15 +18,15 @@
     <div class="brand">
       <span class="brand-mark">🧺</span>
       <div class="brand-text">
-        <h1>TIKET</h1>
-        <p>Pelacak laundry &mdash; pastikan semua kembali utuh</p>
+        <h1>TICKET</h1>
+        <p>Laundry Tracker &mdash; ensure everything comes back</p>
       </div>
     </div>
     <nav class="tabs" id="tabs">
-      <button class="tab-btn active" data-tab="batch">Batch</button>
-      <button class="tab-btn" data-tab="verify">Verifikasi</button>
-      <button class="tab-btn" data-tab="dashboard">Ringkasan</button>
-      <button class="tab-btn" data-tab="data">Data</button>
+      <button class="tab-btn active" data-tab="batch">Batches</button>
+      <button class="tab-btn" data-tab="verify">Verify</button>
+      <button class="tab-btn" data-tab="dashboard">Overview</button>
+      <button class="tab-btn" data-tab="data">Settings</button>
     </nav>
   </header>
 
@@ -37,152 +37,115 @@
 
       <div class="panel-card form-card">
         <div class="panel-card-head">
-          <h2>Batch baru</h2>
-          <span class="eyebrow">01 — Masukkan cucian</span>
+          <h2>New Batch</h2>
+          <span class="eyebrow">01 — Drop off laundry</span>
         </div>
 
         <form id="batch-form" novalidate>
           <div class="field-row">
             <div class="field">
-              <label for="f-laundry-name">Tempat laundry</label>
-              <input type="text" id="f-laundry-name" placeholder="mis. Laundry Kilat Bersih" required>
+              <label for="f-laundry-name">Laundry Place</label>
+              <input type="text" id="f-laundry-name" placeholder="e.g., Sparkle Wash" required>
             </div>
             <div class="field">
-              <label for="f-date-in">Tanggal masuk</label>
+              <label for="f-date-in">Date In</label>
               <input type="date" id="f-date-in" required>
             </div>
             <div class="field">
-              <label for="f-date-est">Estimasi selesai</label>
+              <label for="f-date-est">Est. Completion</label>
               <input type="date" id="f-date-est">
             </div>
           </div>
 
           <div class="field-full">
-            <label>Foto sebelum laundry</label>
-            <div class="photo-drop" id="photo-before-drop">
-              <input type="file" id="f-photo-before" accept="image/*" hidden>
-              <div class="photo-drop-empty" id="photo-before-empty">
-                <span class="photo-drop-icon">📷</span>
-                <span>Klik atau seret foto ke sini</span>
-                <span class="photo-drop-hint">.jpg .png .webp — otomatis dikompres</span>
-              </div>
-              <div class="photo-drop-preview" id="photo-before-preview" hidden>
-                <img id="photo-before-img" alt="Foto sebelum laundry">
-                <button type="button" class="photo-remove" id="photo-before-remove">Hapus foto</button>
-              </div>
-            </div>
-          </div>
-
-          <div class="field-full">
             <div class="items-head">
-              <label>Daftar barang</label>
-              <span class="items-count" id="items-count">0 barang</span>
+              <label>Items List (1 Photo per Item)</label>
+              <span class="items-count" id="items-count">0 items</span>
             </div>
 
             <div class="item-add-row">
-              <input type="text" id="f-item-name" placeholder="Nama barang, mis. Kemeja putih garis">
+              <input type="text" id="f-item-name" placeholder="Item name, e.g., White T-Shirt">
               <select id="f-item-tag">
-                <option value="baju">Baju</option>
-                <option value="kaos">Kaos</option>
-                <option value="kemeja">Kemeja</option>
-                <option value="celana">Celana</option>
-                <option value="celana_dalam">Celana dalam</option>
-                <option value="jaket">Jaket</option>
-                <option value="sprei">Sprei</option>
-                <option value="handuk">Handuk</option>
-                <option value="kaos_kaki">Kaos kaki</option>
-                <option value="lainnya">Lainnya</option>
+                <option value="t_shirt">T-Shirt</option>
+                <option value="shirt">Shirt</option>
+                <option value="pants">Pants</option>
+                <option value="underwear">Underwear</option>
+                <option value="jacket">Jacket</option>
+                <option value="bedsheet">Bed Sheet</option>
+                <option value="towel">Towel</option>
+                <option value="socks">Socks</option>
+                <option value="other">Other</option>
               </select>
-              <button type="button" id="f-item-add" class="btn btn-secondary">+ Tambah</button>
+              
+              <label class="btn btn-secondary" for="f-item-photo" id="lbl-item-photo">
+                📷 <span id="photo-btn-text">Photo</span>
+              </label>
+              <input type="file" id="f-item-photo" accept="image/*" hidden>
+              
+              <button type="button" id="f-item-add" class="btn btn-primary">+ Add</button>
             </div>
 
             <ul class="item-list" id="item-list"></ul>
-            <p class="empty-hint" id="item-list-empty">Belum ada barang ditambahkan.</p>
+            <p class="empty-hint" id="item-list-empty">No items added yet.</p>
           </div>
 
           <div class="field-full">
-            <label for="f-notes">Catatan (opsional)</label>
-            <input type="text" id="f-notes" placeholder="mis. jangan pakai pewangi, ada noda di kerah">
+            <label for="f-notes">Notes (Optional)</label>
+            <input type="text" id="f-notes" placeholder="e.g., Do not use fabric softener, stain on collar">
           </div>
 
           <div class="form-actions">
-            <button type="submit" class="btn btn-primary" id="btn-save-batch">Simpan batch</button>
+            <button type="submit" class="btn btn-primary" id="btn-save-batch">Save Batch</button>
           </div>
         </form>
       </div>
 
       <div class="panel-card">
         <div class="panel-card-head">
-          <h2>Semua batch</h2>
+          <h2>All Batches</h2>
           <div class="filter-chips" id="filter-chips">
-            <button class="chip active" data-filter="all">Semua</button>
-            <button class="chip" data-filter="diproses">Diproses</button>
-            <button class="chip" data-filter="selesai_lengkap">Selesai</button>
-            <button class="chip" data-filter="selesai_ada_hilang">Ada yang hilang</button>
+            <button class="chip active" data-filter="all">All</button>
+            <button class="chip" data-filter="processing">Processing</button>
+            <button class="chip" data-filter="completed">Completed</button>
+            <button class="chip" data-filter="missing_items">Missing Items</button>
           </div>
         </div>
         <div class="ticket-list" id="ticket-list"></div>
-        <p class="empty-hint" id="ticket-list-empty" hidden>Belum ada batch laundry. Buat batch pertamamu di atas.</p>
+        <p class="empty-hint" id="ticket-list-empty" hidden>No laundry batches yet. Create your first batch above.</p>
       </div>
 
     </section>
 
-    <!-- ============ TAB: VERIFIKASI ============ -->
+    <!-- ============ TAB: VERIFY ============ -->
     <section class="tab-panel" id="tab-verify">
 
       <div class="panel-card">
         <div class="panel-card-head">
-          <h2>Pilih batch untuk diverifikasi</h2>
-          <span class="eyebrow">02 — Cek saat cucian kembali</span>
+          <h2>Select batch to verify</h2>
+          <span class="eyebrow">02 — Check returning items</span>
         </div>
         <select id="verify-select" class="select-batch">
-          <option value="">— Pilih batch —</option>
+          <option value="">— Select a batch —</option>
         </select>
-        <p class="empty-hint" id="verify-empty">Tidak ada batch yang sedang diproses.</p>
+        <p class="empty-hint" id="verify-empty">No processing batches available.</p>
       </div>
 
       <div class="panel-card" id="verify-detail" hidden>
         <div class="panel-card-head">
           <h2 id="verify-title">—</h2>
-          <span class="stamp" id="verify-status-stamp">Diproses</span>
-        </div>
-
-        <div class="field-full">
-          <label>Foto sesudah laundry</label>
-          <div class="photo-drop" id="photo-after-drop">
-            <input type="file" id="f-photo-after" accept="image/*" hidden>
-            <div class="photo-drop-empty" id="photo-after-empty">
-              <span class="photo-drop-icon">📷</span>
-              <span>Klik atau seret foto ke sini</span>
-              <span class="photo-drop-hint">.jpg .png .webp — otomatis dikompres</span>
-            </div>
-            <div class="photo-drop-preview" id="photo-after-preview" hidden>
-              <img id="photo-after-img" alt="Foto sesudah laundry">
-              <button type="button" class="photo-remove" id="photo-after-remove">Hapus foto</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="photo-compare" id="photo-compare" hidden>
-          <div>
-            <span class="compare-label">Sebelum</span>
-            <img id="compare-before-img" alt="Sebelum">
-          </div>
-          <div>
-            <span class="compare-label">Sesudah</span>
-            <img id="compare-after-img" alt="Sesudah">
-          </div>
+          <span class="stamp" id="verify-status-stamp">Processing</span>
         </div>
 
         <div class="checklist-head">
-          <label>Checklist barang kembali</label>
-          <span id="checklist-progress">0 / 0 dicentang</span>
+          <label>Returned Items Checklist</label>
+          <span id="checklist-progress">0 / 0 checked</span>
         </div>
+        
         <ul class="checklist" id="checklist"></ul>
 
-        <div class="form-actions form-actions-split">
-          <button class="btn btn-ghost" id="btn-check-all">Centang semua</button>
-          <button class="btn btn-primary" id="btn-finish-verify">Selesaikan verifikasi</button>
+        <div class="form-actions form-actions-split" style="margin-top: 20px;">
+          <button class="btn btn-ghost" id="btn-check-all">Check All</button>
+          <button class="btn btn-primary" id="btn-finish-verify">Finish Verification</button>
         </div>
 
         <div class="missing-banner" id="missing-banner" hidden></div>
@@ -195,26 +158,26 @@
 
       <div class="panel-card">
         <div class="panel-card-head">
-          <h2>Ringkasan</h2>
-          <span class="eyebrow">03 — In &amp; out</span>
+          <h2>Overview</h2>
+          <span class="eyebrow">03 — In &amp; out stats</span>
         </div>
         <div class="stat-grid" id="stat-grid"></div>
       </div>
 
       <div class="panel-card">
         <div class="panel-card-head">
-          <h2>Barang hilang</h2>
+          <h2>Missing Items</h2>
         </div>
         <ul class="missing-list" id="missing-list"></ul>
-        <p class="empty-hint" id="missing-list-empty">Tidak ada barang yang hilang. Aman.</p>
+        <p class="empty-hint" id="missing-list-empty">No missing items. Everything is safe.</p>
       </div>
 
       <div class="panel-card">
         <div class="panel-card-head">
-          <h2>Akan dihapus otomatis</h2>
+          <h2>Auto-Deletion Queue</h2>
         </div>
         <ul class="expiry-list" id="expiry-list"></ul>
-        <p class="empty-hint" id="expiry-list-empty">Tidak ada batch yang akan dihapus dalam waktu dekat.</p>
+        <p class="empty-hint" id="expiry-list-empty">No resolved batches pending deletion.</p>
       </div>
 
     </section>
@@ -224,34 +187,34 @@
 
       <div class="panel-card">
         <div class="panel-card-head">
-          <h2>Pengaturan</h2>
-          <span class="eyebrow">04 — Penyimpanan lokal</span>
+          <h2>Settings</h2>
+          <span class="eyebrow">04 — Local Storage</span>
         </div>
         <div class="field">
-          <label for="f-retention">Hapus otomatis batch selesai setelah (hari)</label>
+          <label for="f-retention">Auto-delete completed batches after (days)</label>
           <input type="number" id="f-retention" min="1" max="90" value="7">
         </div>
-        <p class="hint-text">Hanya batch berstatus <strong>Selesai</strong> yang dihitung dan dihapus otomatis. Batch yang masih diproses tidak akan pernah dihapus otomatis.</p>
+        <p class="hint-text">Only <strong>Completed</strong> batches are counted and deleted automatically. Batches still marked as Processing will never be deleted.</p>
       </div>
 
       <div class="panel-card">
         <div class="panel-card-head">
-          <h2>Cadangkan &amp; pulihkan</h2>
+          <h2>Backup &amp; Restore</h2>
         </div>
-        <p class="hint-text">Semua data tersimpan hanya di browser ini (localStorage). Ekspor secara berkala agar tidak hilang saat cache dibersihkan atau pindah perangkat.</p>
+        <p class="hint-text">All data is stored purely in this browser (localStorage). Export periodically to prevent loss when clearing cache.</p>
         <div class="form-actions form-actions-split">
-          <button class="btn btn-secondary" id="btn-export">Ekspor data (.json)</button>
-          <label class="btn btn-secondary" for="f-import">Impor data (.json)</label>
+          <button class="btn btn-secondary" id="btn-export">Export Data (.json)</button>
+          <label class="btn btn-secondary" for="f-import">Import Data (.json)</label>
           <input type="file" id="f-import" accept="application/json" hidden>
         </div>
       </div>
 
       <div class="panel-card panel-card-danger">
         <div class="panel-card-head">
-          <h2>Hapus semua data</h2>
+          <h2>Wipe All Data</h2>
         </div>
-        <p class="hint-text">Menghapus seluruh batch, barang, dan foto secara permanen dari browser ini.</p>
-        <button class="btn btn-danger" id="btn-clear-all">Hapus semua data</button>
+        <p class="hint-text">Permanently deletes all batches, items, and photos from this browser.</p>
+        <button class="btn btn-danger" id="btn-clear-all">Clear All Data</button>
       </div>
 
     </section>
