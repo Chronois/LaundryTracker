@@ -10,8 +10,8 @@
   let currentDraftPhoto = null;
   let activeVerifyId = '';
   let activeFilter = 'all';
-  let editingBatchId = null; // Menandai jika sedang dalam mode edit batch
-  let editingItemId = null;  // Menandai jika sedang dalam mode edit item di dalam form
+  let editingBatchId = null;
+  let editingItemId = null;
 
   // ---------- element refs ----------
   const el = (id) => document.getElementById(id);
@@ -19,6 +19,12 @@
   const els = {
     tabs: el('tabs'),
     panels: document.querySelectorAll('.tab-panel'),
+
+    // Topbar Actions
+    btnRetention: el('btn-retention'),
+    btnExport: el('btn-export'),
+    fImport: el('f-import'),
+    btnClearAll: el('btn-clear-all'),
 
     batchForm: el('batch-form'),
     batchFormTitle: el('batch-form-title'),
@@ -63,11 +69,6 @@
     missingListEmpty: el('missing-list-empty'),
     expiryList: el('expiry-list'),
     expiryListEmpty: el('expiry-list-empty'),
-
-    retention: el('f-retention'),
-    btnExport: el('btn-export'),
-    fImport: el('f-import'),
-    btnClearAll: el('btn-clear-all'),
 
     toast: el('toast'),
     
@@ -122,6 +123,73 @@
       els.imageModal.hidden = true;
     }
   });
+
+  // ==================================================
+  // GLOBAL SETTINGS (Header Actions)
+  // ==================================================
+  
+  els.btnRetention.addEventListener('click', () => {
+    const currentDays = settings.retentionDays || 7;
+    const input = prompt('Auto-delete completed batches after how many days?', currentDays);
+    
+    if (input === null) return; // User cancelled
+    
+    let v = parseInt(input, 10);
+    if (isNaN(v) || v < 1) {
+      showToast('Invalid input. Please enter a valid number of days.');
+      return;
+    }
+    
+    settings.retentionDays = v;
+    Storage.saveSettings(settings);
+    renderTicketList();
+    renderDashboard();
+    showToast(`Auto-delete set to ${v} days.`);
+  });
+
+  els.btnExport.addEventListener('click', () => {
+    Storage.exportData();
+    showToast('Backup file downloaded.');
+  });
+
+  els.fImport.addEventListener('change', () => {
+    const file = els.fImport.files[0];
+    if (!file) return;
+    if (!confirm('Importing will overwrite all current data. Continue?')) {
+      els.fImport.value = '';
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const count = Storage.importData(reader.result);
+        batches = Storage.loadBatches();
+        settings = Storage.loadSettings();
+        renderTicketList();
+        renderVerifySelect();
+        renderDashboard();
+        showToast(`${count} batches successfully imported.`);
+      } catch (err) {
+        showToast('Failed to import: ' + err.message);
+      }
+      els.fImport.value = '';
+    };
+    reader.readAsText(file);
+  });
+
+  els.btnClearAll.addEventListener('click', () => {
+    if (!confirm('Are you sure you want to permanently wipe ALL laundry data? This cannot be undone.')) return;
+    Storage.clearAll();
+    batches = [];
+    settings = { retentionDays: 7 };
+    activeVerifyId = '';
+    renderTicketList();
+    renderVerifySelect();
+    renderVerifyDetail();
+    renderDashboard();
+    showToast('All data has been cleared.');
+  });
+
 
   // ==================================================
   // BATCH FORM (1 Item 1 Photo)
@@ -599,72 +667,12 @@
   }
 
   // ==================================================
-  // DATA TAB
-  // ==================================================
-
-  els.retention.addEventListener('change', () => {
-    let v = parseInt(els.retention.value, 10);
-    if (isNaN(v) || v < 1) v = 7;
-    settings.retentionDays = v;
-    Storage.saveSettings(settings);
-    renderTicketList();
-    renderDashboard();
-    showToast('Settings saved.');
-  });
-
-  els.btnExport.addEventListener('click', () => {
-    Storage.exportData();
-    showToast('Backup file downloaded.');
-  });
-
-  els.fImport.addEventListener('change', () => {
-    const file = els.fImport.files[0];
-    if (!file) return;
-    if (!confirm('Importing will overwrite all current data. Continue?')) {
-      els.fImport.value = '';
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = () => {
-      try {
-        const count = Storage.importData(reader.result);
-        batches = Storage.loadBatches();
-        settings = Storage.loadSettings();
-        els.retention.value = settings.retentionDays;
-        renderTicketList();
-        renderVerifySelect();
-        renderDashboard();
-        showToast(`${count} batches successfully imported.`);
-      } catch (err) {
-        showToast('Failed to import: ' + err.message);
-      }
-      els.fImport.value = '';
-    };
-    reader.readAsText(file);
-  });
-
-  els.btnClearAll.addEventListener('click', () => {
-    if (!confirm('Are you sure you want to permanently wipe ALL laundry data? This cannot be undone.')) return;
-    Storage.clearAll();
-    batches = [];
-    settings = { retentionDays: 7 };
-    activeVerifyId = '';
-    els.retention.value = 7;
-    renderTicketList();
-    renderVerifySelect();
-    renderVerifyDetail();
-    renderDashboard();
-    showToast('All data has been cleared.');
-  });
-
-  // ==================================================
   // INIT
   // ==================================================
 
   function init() {
     batches = Storage.loadBatches();
     settings = Storage.loadSettings();
-    els.retention.value = settings.retentionDays;
 
     const { kept, removed } = Storage.runAutoCleanup(batches, settings.retentionDays);
     if (removed > 0) {
