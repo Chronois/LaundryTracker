@@ -17,7 +17,7 @@ const Utils = (() => {
   function formatDate(iso) {
     if (!iso) return '—';
     const [y, m, d] = iso.split('-');
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const mi = parseInt(m, 10) - 1;
     if (mi < 0 || mi > 11 || !d) return iso;
     return `${parseInt(d, 10)} ${months[mi]} ${y}`;
@@ -30,31 +30,29 @@ const Utils = (() => {
 
   function tagLabel(tag) {
     const map = {
-      baju: 'Baju', kaos: 'Kaos', kemeja: 'Kemeja', celana: 'Celana',
-      celana_dalam: 'Celana dalam', jaket: 'Jaket', sprei: 'Sprei',
-      handuk: 'Handuk', kaos_kaki: 'Kaos kaki', lainnya: 'Lainnya'
+      shirt: 'Shirt', t_shirt: 'T-Shirt', pants: 'Pants', 
+      underwear: 'Underwear', jacket: 'Jacket', bedsheet: 'Bed Sheet',
+      towel: 'Towel', socks: 'Socks', other: 'Other'
     };
     return map[tag] || tag;
   }
 
   function statusLabel(status) {
     const map = {
-      diproses: 'Diproses',
-      selesai_lengkap: 'Selesai',
-      selesai_ada_hilang: 'Ada yang hilang'
+      processing: 'Processing',
+      completed: 'Completed',
+      missing_items: 'Missing Items'
     };
     return map[status] || status;
   }
 
-  // Resize + compress an uploaded image file into a JPEG data URL.
-  // Keeps localStorage usage reasonable (a few hundred KB per photo at most).
   function compressImage(file, maxDim = 900, quality = 0.62) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
-      reader.onerror = () => reject(new Error('Gagal membaca file gambar'));
+      reader.onerror = () => reject(new Error('Failed to read image file'));
       reader.onload = () => {
         const img = new Image();
-        img.onerror = () => reject(new Error('Gagal memuat gambar'));
+        img.onerror = () => reject(new Error('Failed to load image'));
         img.onload = () => {
           let { width, height } = img;
           if (width > height && width > maxDim) {
