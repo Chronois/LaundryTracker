@@ -1,7 +1,7 @@
 // storage.js — all localStorage reads/writes live here.
 
 const Storage = (() => {
-  // Changed storage keys to avoid conflicts with previous version schemas
+  // Keep the same keys so previous ticket entries are not lost
   const KEY_BATCHES = 'ticket_batches_v2';
   const KEY_SETTINGS = 'ticket_settings_v2';
   const KEY_COUNTER = 'ticket_counter_v2';
@@ -66,7 +66,7 @@ const Storage = (() => {
   function exportData() {
     const payload = {
       exportedAt: new Date().toISOString(),
-      app: 'ticket-laundry-tracker',
+      app: 'laundrytracker',
       version: 2,
       settings: loadSettings(),
       batches: loadBatches()
@@ -76,7 +76,7 @@ const Storage = (() => {
     const a = document.createElement('a');
     const stamp = new Date().toISOString().slice(0, 10);
     a.href = url;
-    a.download = `ticket-laundry-backup-${stamp}.json`;
+    a.download = `laundrytracker-backup-${stamp}.json`;
     document.body.appendChild(a);
     a.click();
     a.remove();
