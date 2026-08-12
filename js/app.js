@@ -10,6 +10,7 @@
   let currentDraftPhoto = null;
   let activeVerifyId = '';
   let activeFilter = 'all';
+  let editingBatchId = null; // Menandai jika sedang dalam mode edit
 
   // ---------- element refs ----------
   const el = (id) => document.getElementById(id);
@@ -19,6 +20,10 @@
     panels: document.querySelectorAll('.tab-panel'),
 
     batchForm: el('batch-form'),
+    batchFormTitle: el('batch-form-title'),
+    btnSaveBatch: el('btn-save-batch'),
+    btnCancelEdit: el('btn-cancel-edit'),
+
     laundryName: el('f-laundry-name'),
     dateIn: el('f-date-in'),
     dateEst: el('f-date-est'),
@@ -121,7 +126,6 @@
   // BATCH FORM (1 Item 1 Photo)
   // ==================================================
 
-  // Fungsi pengolahan gambar (Untuk File maupun Kamera)
   async function processPhotoSelection(file) {
     if (!file) return;
     
@@ -139,7 +143,6 @@
     }
   }
 
-  // Handle Photo Selection (Gallery & Camera)
   els.itemPhotoInput.addEventListener('change', (e) => processPhotoSelection(e.target.files[0]));
   els.itemCameraInput.addEventListener('change', (e) => processPhotoSelection(e.target.files[0]));
 
@@ -206,7 +209,7 @@
     renderDraftItems();
   });
 
-  // Handle Main Form Submission
+  // Handle Main Form Submission (Create or Edit)
   els.batchForm.addEventListener('submit', (e) => {
     e.preventDefault();
     const laundryName = els.laundryName.value.trim();
@@ -214,27 +217,45 @@
     if (!els.dateIn.value) { showToast('Enter the date in.'); els.dateIn.focus(); return; }
     if (draftItems.length === 0) { showToast('Add at least 1 item.'); els.itemName.focus(); return; }
 
-    const batch = {
-      id: Utils.uid('batch'),
-      code: Storage.nextCode(),
-      laundryName,
-      dateIn: els.dateIn.value,
-      estimatedDone: els.dateEst.value || '',
-      items: draftItems.map(i => ({ ...i, checked: false })),
-      status: 'processing',
-      createdAt: Date.now(),
-      completedAt: null,
-      notes: els.notes.value.trim()
-    };
+    if (editingBatchId) {
+      const batch = batches.find(b => b.id === editingBatchId);
+      if (batch) {
+        batch.laundryName = laundryName;
+        batch.dateIn = els.dateIn.value;
+        batch.estimatedDone = els.dateEst.value || '';
+        batch.notes = els.notes.value.trim();
+        batch.items = draftItems.map(i => ({ ...i })); // deep copy
+      }
+      showToast(`Batch ${batch.code} updated.`);
+    } else {
+      const batch = {
+        id: Utils.uid('batch'),
+        code: Storage.nextCode(),
+        laundryName,
+        dateIn: els.dateIn.value,
+        estimatedDone: els.dateEst.value || '',
+        items: draftItems.map(i => ({ ...i })),
+        status: 'processing',
+        createdAt: Date.now(),
+        completedAt: null,
+        notes: els.notes.value.trim()
+      };
+      batches.unshift(batch);
+      showToast(`Batch ${batch.code} saved.`);
+    }
 
-    batches.unshift(batch);
     Storage.saveBatches(batches);
     resetBatchForm();
     renderTicketList();
     renderVerifySelect();
-    showToast(`Batch ${batch.code} saved.`);
+    
+    if (editingBatchId) {
+      renderDashboard();
+      renderVerifyDetail();
+    }
   });
 
+  // Reset form and turn off edit mode
   function resetBatchForm() {
     els.batchForm.reset();
     els.dateIn.value = Utils.todayISO();
@@ -247,8 +268,18 @@
     els.lblItemPhoto.style.color = '';
     els.lblItemCamera.style.borderColor = '';
     els.lblItemCamera.style.color = '';
+    
+    editingBatchId = null;
+    els.batchFormTitle.textContent = 'New Batch';
+    els.btnSaveBatch.textContent = 'Save Batch';
+    els.btnCancelEdit.hidden = true;
+    
     renderDraftItems();
   }
+
+  els.btnCancelEdit.addEventListener('click', () => {
+    resetBatchForm();
+  });
 
   // ==================================================
   // TICKET LIST (Batches Tab)
@@ -305,8 +336,9 @@
           ${expiryHtml}
           <div class="ticket-actions">
             <button class="btn btn-secondary" data-action="verify" data-id="${b.id}">
-              ${b.status === 'processing' ? 'Verify Items' : 'View Details'}
+              ${b.status === 'processing' ? 'Verify' : 'Details'}
             </button>
+            <button class="btn btn-ghost" data-action="edit" data-id="${b.id}">Edit</button>
             <button class="btn btn-ghost" data-action="delete" data-id="${b.id}">Delete</button>
           </div>
         </div>
@@ -321,6 +353,8 @@
     const id = btn.dataset.id;
     if (btn.dataset.action === 'verify') {
       goToVerifyTab(id);
+    } else if (btn.dataset.action === 'edit') {
+      editBatch(id);
     } else if (btn.dataset.action === 'delete') {
       const batch = batches.find(b => b.id === id);
       if (batch && confirm(`Permanently delete batch ${batch.code} (${batch.laundryName})?`)) {
@@ -333,6 +367,32 @@
       }
     }
   });
+
+  // Activate Edit Mode
+  function editBatch(id) {
+    const batch = batches.find(b => b.id === id);
+    if (!batch) return;
+    
+    editingBatchId = batch.id;
+    els.laundryName.value = batch.laundryName;
+    els.dateIn.value = batch.dateIn;
+    els.dateEst.value = batch.estimatedDone || '';
+    els.notes.value = batch.notes || '';
+    
+    // Deep copy to avoid mutating actual storage until saved
+    draftItems = batch.items.map(i => ({ ...i }));
+    
+    els.batchFormTitle.textContent = `Edit Batch: ${batch.code}`;
+    els.btnSaveBatch.textContent = 'Update Batch';
+    els.btnCancelEdit.hidden = false;
+    
+    renderDraftItems();
+    
+    // Switch to batch tab and scroll up
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === 'batch'));
+    els.panels.forEach(p => p.classList.toggle('active', p.id === 'tab-batch'));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
 
   // ==================================================
   // VERIFY TAB
