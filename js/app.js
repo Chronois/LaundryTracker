@@ -7,8 +7,7 @@
   let batches = [];
   let settings = { retentionDays: 7 };
   let draftItems = [];
-  let photoBeforeData = null;
-  let photoAfterDraft = null;
+  let currentDraftPhoto = null;
   let activeVerifyId = '';
   let activeFilter = 'all';
 
@@ -25,15 +24,11 @@
     dateEst: el('f-date-est'),
     notes: el('f-notes'),
 
-    photoBeforeDrop: el('photo-before-drop'),
-    photoBeforeInput: el('f-photo-before'),
-    photoBeforeEmpty: el('photo-before-empty'),
-    photoBeforePreview: el('photo-before-preview'),
-    photoBeforeImg: el('photo-before-img'),
-    photoBeforeRemove: el('photo-before-remove'),
-
     itemName: el('f-item-name'),
     itemTag: el('f-item-tag'),
+    itemPhotoInput: el('f-item-photo'),
+    lblItemPhoto: el('lbl-item-photo'),
+    photoBtnText: el('photo-btn-text'),
     itemAdd: el('f-item-add'),
     itemList: el('item-list'),
     itemListEmpty: el('item-list-empty'),
@@ -48,17 +43,6 @@
     verifyDetail: el('verify-detail'),
     verifyTitle: el('verify-title'),
     verifyStatusStamp: el('verify-status-stamp'),
-
-    photoAfterDrop: el('photo-after-drop'),
-    photoAfterInput: el('f-photo-after'),
-    photoAfterEmpty: el('photo-after-empty'),
-    photoAfterPreview: el('photo-after-preview'),
-    photoAfterImg: el('photo-after-img'),
-    photoAfterRemove: el('photo-after-remove'),
-
-    photoCompare: el('photo-compare'),
-    compareBeforeImg: el('compare-before-img'),
-    compareAfterImg: el('compare-after-img'),
 
     checklist: el('checklist'),
     checklistProgress: el('checklist-progress'),
@@ -107,19 +91,38 @@
   }
 
   // ==================================================
-  // BATCH FORM
+  // BATCH FORM (1 Item 1 Photo)
   // ==================================================
+
+  // Handle Photo Selection
+  els.itemPhotoInput.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    els.photoBtnText.textContent = '...';
+    try {
+      currentDraftPhoto = await Utils.compressImage(file, 600, 0.7); // Compress to smaller thumbnail size
+      els.lblItemPhoto.style.borderColor = 'var(--teal)';
+      els.lblItemPhoto.style.color = 'var(--teal)';
+      els.photoBtnText.textContent = '✓ OK';
+    } catch (err) {
+      showToast('Failed to process photo: ' + err.message);
+      els.photoBtnText.textContent = 'Photo';
+    }
+  });
 
   function renderDraftItems() {
     els.itemList.innerHTML = '';
-    els.itemsCount.textContent = `${draftItems.length} barang`;
+    els.itemsCount.textContent = `${draftItems.length} items`;
     els.itemListEmpty.hidden = draftItems.length > 0;
+    
     draftItems.forEach(item => {
       const li = document.createElement('li');
       li.innerHTML = `
+        <img src="${item.photo}" class="item-thumb" alt="${item.name}">
         <span class="item-name">${Utils.escapeHtml(item.name)}</span>
         <span class="tag-pill">${Utils.tagLabel(item.tag)}</span>
-        <button type="button" class="item-remove" data-id="${item.id}" aria-label="Hapus barang">✕</button>
+        <button type="button" class="item-remove" data-id="${item.id}" aria-label="Remove item">✕</button>
       `;
       els.itemList.appendChild(li);
     });
@@ -132,9 +135,31 @@
 
   function addDraftItem() {
     const name = els.itemName.value.trim();
-    if (!name) { els.itemName.focus(); return; }
-    draftItems.push({ id: Utils.uid('item'), name, tag: els.itemTag.value, checked: false });
+    if (!name) { 
+      els.itemName.focus(); 
+      return; 
+    }
+    if (!currentDraftPhoto) {
+      showToast('Please add a photo for this item.');
+      return;
+    }
+
+    draftItems.push({ 
+      id: Utils.uid('item'), 
+      name, 
+      tag: els.itemTag.value, 
+      photo: currentDraftPhoto,
+      checked: false 
+    });
+    
+    // Reset inputs
     els.itemName.value = '';
+    currentDraftPhoto = null;
+    els.itemPhotoInput.value = '';
+    els.photoBtnText.textContent = 'Photo';
+    els.lblItemPhoto.style.borderColor = '';
+    els.lblItemPhoto.style.color = '';
+    
     els.itemName.focus();
     renderDraftItems();
   }
@@ -146,53 +171,13 @@
     renderDraftItems();
   });
 
-  // photo before upload
-  setupPhotoDrop(els.photoBeforeDrop, els.photoBeforeInput, els.photoBeforeEmpty,
-    els.photoBeforePreview, els.photoBeforeImg, els.photoBeforeRemove,
-    (dataUrl) => { photoBeforeData = dataUrl; },
-    () => { photoBeforeData = null; });
-
-  function setupPhotoDrop(drop, input, empty, preview, img, removeBtn, onSet, onClear) {
-    drop.addEventListener('click', (e) => {
-      if (e.target === removeBtn) return;
-      input.click();
-    });
-    drop.addEventListener('dragover', (e) => { e.preventDefault(); drop.classList.add('dragover'); });
-    drop.addEventListener('dragleave', () => drop.classList.remove('dragover'));
-    drop.addEventListener('drop', (e) => {
-      e.preventDefault();
-      drop.classList.remove('dragover');
-      if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
-    });
-    input.addEventListener('change', () => {
-      if (input.files[0]) handleFile(input.files[0]);
-    });
-    removeBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      onClear();
-      input.value = '';
-      empty.hidden = false;
-      preview.hidden = true;
-    });
-    async function handleFile(file) {
-      try {
-        const dataUrl = await Utils.compressImage(file);
-        onSet(dataUrl);
-        img.src = dataUrl;
-        empty.hidden = true;
-        preview.hidden = false;
-      } catch (err) {
-        showToast('Gagal memproses foto: ' + err.message);
-      }
-    }
-  }
-
+  // Handle Main Form Submission
   els.batchForm.addEventListener('submit', (e) => {
     e.preventDefault();
     const laundryName = els.laundryName.value.trim();
-    if (!laundryName) { showToast('Isi nama tempat laundry dulu.'); els.laundryName.focus(); return; }
-    if (!els.dateIn.value) { showToast('Isi tanggal masuk dulu.'); els.dateIn.focus(); return; }
-    if (draftItems.length === 0) { showToast('Tambahkan minimal 1 barang.'); els.itemName.focus(); return; }
+    if (!laundryName) { showToast('Enter the laundry name first.'); els.laundryName.focus(); return; }
+    if (!els.dateIn.value) { showToast('Enter the date in.'); els.dateIn.focus(); return; }
+    if (draftItems.length === 0) { showToast('Add at least 1 item.'); els.itemName.focus(); return; }
 
     const batch = {
       id: Utils.uid('batch'),
@@ -201,9 +186,7 @@
       dateIn: els.dateIn.value,
       estimatedDone: els.dateEst.value || '',
       items: draftItems.map(i => ({ ...i, checked: false })),
-      photoBefore: photoBeforeData,
-      photoAfter: null,
-      status: 'diproses',
+      status: 'processing',
       createdAt: Date.now(),
       completedAt: null,
       notes: els.notes.value.trim()
@@ -214,22 +197,22 @@
     resetBatchForm();
     renderTicketList();
     renderVerifySelect();
-    showToast(`Batch ${batch.code} disimpan.`);
+    showToast(`Batch ${batch.code} saved.`);
   });
 
   function resetBatchForm() {
     els.batchForm.reset();
     els.dateIn.value = Utils.todayISO();
     draftItems = [];
-    photoBeforeData = null;
-    els.photoBeforeEmpty.hidden = false;
-    els.photoBeforePreview.hidden = true;
-    els.photoBeforeInput.value = '';
+    currentDraftPhoto = null;
+    els.photoBtnText.textContent = 'Photo';
+    els.lblItemPhoto.style.borderColor = '';
+    els.lblItemPhoto.style.color = '';
     renderDraftItems();
   }
 
   // ==================================================
-  // TICKET LIST (batch tab)
+  // TICKET LIST (Batches Tab)
   // ==================================================
 
   els.filterChips.addEventListener('click', (e) => {
@@ -253,11 +236,11 @@
       const tagSet = [...new Set(b.items.map(i => i.tag))].slice(0, 4);
 
       let expiryHtml = '';
-      const isResolved = b.status === 'selesai_lengkap' || b.status === 'selesai_ada_hilang';
+      const isResolved = b.status === 'completed' || b.status === 'missing_items';
       if (isResolved && b.completedAt) {
         const deleteAt = b.completedAt + settings.retentionDays * 86400000;
         const daysLeft = Math.max(0, Math.ceil((deleteAt - Date.now()) / 86400000));
-        expiryHtml = `<span class="ticket-expiry">Terhapus otomatis dalam ${daysLeft} hari</span>`;
+        expiryHtml = `<span class="ticket-expiry">Auto-deletes in ${daysLeft} days</span>`;
       }
 
       const div = document.createElement('div');
@@ -270,12 +253,12 @@
         <div class="ticket-body">
           <div class="ticket-body-top">
             <h3>${Utils.escapeHtml(b.laundryName)}</h3>
-            <span class="ticket-meta"><span>${b.items.length} barang</span></span>
+            <span class="ticket-meta"><span>${b.items.length} items</span></span>
           </div>
           <div class="ticket-meta">
-            <span>Masuk: ${Utils.formatDate(b.dateIn)}</span>
-            <span>Estimasi: ${b.estimatedDone ? Utils.formatDate(b.estimatedDone) : '—'}</span>
-            <span>Kembali: ${returned}/${b.items.length}</span>
+            <span>In: ${Utils.formatDate(b.dateIn)}</span>
+            <span>Est: ${b.estimatedDone ? Utils.formatDate(b.estimatedDone) : '—'}</span>
+            <span>Returned: ${returned}/${b.items.length}</span>
           </div>
           <div class="ticket-tags">
             ${tagSet.map(t => `<span class="tag-pill">${Utils.tagLabel(t)}</span>`).join('')}
@@ -283,9 +266,9 @@
           ${expiryHtml}
           <div class="ticket-actions">
             <button class="btn btn-secondary" data-action="verify" data-id="${b.id}">
-              ${b.status === 'diproses' ? 'Verifikasi' : 'Lihat detail'}
+              ${b.status === 'processing' ? 'Verify Items' : 'View Details'}
             </button>
-            <button class="btn btn-ghost" data-action="delete" data-id="${b.id}">Hapus</button>
+            <button class="btn btn-ghost" data-action="delete" data-id="${b.id}">Delete</button>
           </div>
         </div>
       `;
@@ -301,13 +284,13 @@
       goToVerifyTab(id);
     } else if (btn.dataset.action === 'delete') {
       const batch = batches.find(b => b.id === id);
-      if (batch && confirm(`Hapus batch ${batch.code} (${batch.laundryName}) secara permanen?`)) {
+      if (batch && confirm(`Permanently delete batch ${batch.code} (${batch.laundryName})?`)) {
         batches = batches.filter(b => b.id !== id);
         Storage.saveBatches(batches);
         renderTicketList();
         renderVerifySelect();
         renderDashboard();
-        showToast('Batch dihapus.');
+        showToast('Batch deleted.');
       }
     }
   });
@@ -318,7 +301,7 @@
 
   function renderVerifySelect() {
     const sorted = [...batches].sort((a, b) => b.createdAt - a.createdAt);
-    els.verifySelect.innerHTML = '<option value="">— Pilih batch —</option>' +
+    els.verifySelect.innerHTML = '<option value="">— Select a batch —</option>' +
       sorted.map(b => `<option value="${b.id}">${b.code} — ${Utils.escapeHtml(b.laundryName)} (${Utils.statusLabel(b.status)})</option>`).join('');
     els.verifyEmpty.hidden = batches.length > 0;
     if (activeVerifyId && !batches.some(b => b.id === activeVerifyId)) {
@@ -345,29 +328,7 @@
     els.verifyStatusStamp.textContent = Utils.statusLabel(batch.status);
     els.verifyStatusStamp.className = `stamp stamp-${batch.status}`;
 
-    const editable = batch.status === 'diproses';
-
-    // after-photo
-    photoAfterDraft = batch.photoAfter;
-    if (batch.photoAfter) {
-      els.photoAfterImg.src = batch.photoAfter;
-      els.photoAfterEmpty.hidden = true;
-      els.photoAfterPreview.hidden = false;
-    } else {
-      els.photoAfterEmpty.hidden = false;
-      els.photoAfterPreview.hidden = true;
-    }
-    els.photoAfterDrop.style.pointerEvents = editable ? 'auto' : 'none';
-    els.photoAfterDrop.style.opacity = editable ? '1' : '0.6';
-
-    if (batch.photoBefore && batch.photoAfter) {
-      els.photoCompare.hidden = false;
-      els.compareBeforeImg.src = batch.photoBefore;
-      els.compareAfterImg.src = batch.photoAfter;
-    } else {
-      els.photoCompare.hidden = true;
-    }
-
+    const editable = batch.status === 'processing';
     renderChecklist(batch, editable);
 
     els.btnCheckAll.hidden = !editable;
@@ -377,10 +338,10 @@
       const missing = batch.items.filter(i => !i.checked);
       if (missing.length > 0) {
         els.missingBanner.hidden = false;
-        els.missingBanner.textContent = `⚠ ${missing.length} barang belum kembali: ${missing.map(i => i.name).join(', ')}`;
+        els.missingBanner.textContent = `⚠ ${missing.length} items still missing: ${missing.map(i => i.name).join(', ')}`;
       } else {
         els.missingBanner.hidden = false;
-        els.missingBanner.textContent = `✓ Diverifikasi lengkap pada ${new Date(batch.completedAt).toLocaleDateString('id-ID')}.`;
+        els.missingBanner.textContent = `✓ Fully verified on ${new Date(batch.completedAt).toLocaleDateString('en-US')}.`;
       }
     } else {
       els.missingBanner.hidden = true;
@@ -389,13 +350,15 @@
 
   function renderChecklist(batch, editable) {
     const checkedCount = batch.items.filter(i => i.checked).length;
-    els.checklistProgress.textContent = `${checkedCount} / ${batch.items.length} dicentang`;
+    els.checklistProgress.textContent = `${checkedCount} / ${batch.items.length} checked`;
     els.checklist.innerHTML = '';
+    
     batch.items.forEach(item => {
       const li = document.createElement('li');
       li.className = item.checked ? 'checked' : (!editable ? 'missing' : '');
       li.innerHTML = `
         <input type="checkbox" data-id="${item.id}" ${item.checked ? 'checked' : ''} ${editable ? '' : 'disabled'}>
+        <img src="${item.photo}" class="item-thumb" alt="${item.name}">
         <span class="item-name">${Utils.escapeHtml(item.name)}</span>
         <span class="tag-pill">${Utils.tagLabel(item.tag)}</span>
       `;
@@ -411,7 +374,7 @@
     const item = batch.items.find(i => i.id === cb.dataset.id);
     if (item) item.checked = cb.checked;
     Storage.saveBatches(batches);
-    renderChecklist(batch, batch.status === 'diproses');
+    renderChecklist(batch, batch.status === 'processing');
   });
 
   els.btnCheckAll.addEventListener('click', () => {
@@ -426,49 +389,39 @@
     const batch = currentVerifyBatch();
     if (!batch) return;
     const missing = batch.items.filter(i => !i.checked);
-    batch.status = missing.length > 0 ? 'selesai_ada_hilang' : 'selesai_lengkap';
+    batch.status = missing.length > 0 ? 'missing_items' : 'completed';
     batch.completedAt = Date.now();
     Storage.saveBatches(batches);
+    
     renderVerifyDetail();
     renderVerifySelect();
     els.verifySelect.value = batch.id;
     renderTicketList();
     renderDashboard();
+    
     showToast(missing.length > 0
-      ? `Verifikasi selesai — ${missing.length} barang hilang.`
-      : 'Verifikasi selesai — semua barang lengkap.');
+      ? `Verification done — ${missing.length} items missing.`
+      : 'Verification done — all items returned.');
   });
-
-  setupPhotoDrop(els.photoAfterDrop, els.photoAfterInput, els.photoAfterEmpty,
-    els.photoAfterPreview, els.photoAfterImg, els.photoAfterRemove,
-    (dataUrl) => {
-      photoAfterDraft = dataUrl;
-      const batch = currentVerifyBatch();
-      if (batch) { batch.photoAfter = dataUrl; Storage.saveBatches(batches); renderVerifyDetail(); }
-    },
-    () => {
-      photoAfterDraft = null;
-      const batch = currentVerifyBatch();
-      if (batch) { batch.photoAfter = null; Storage.saveBatches(batches); }
-    });
 
   // ==================================================
   // DASHBOARD
   // ==================================================
 
   function renderDashboard() {
-    const activeBatches = batches.filter(b => b.status === 'diproses');
+    const activeBatches = batches.filter(b => b.status === 'processing');
     const allItems = batches.flatMap(b => b.items);
     const returnedItems = allItems.filter(i => i.checked);
-    const missingBatches = batches.filter(b => b.status === 'selesai_ada_hilang');
+    const missingBatches = batches.filter(b => b.status === 'missing_items');
     const missingItemCount = missingBatches.reduce((sum, b) => sum + b.items.filter(i => !i.checked).length, 0);
 
     const stats = [
-      { label: 'Batch diproses', value: activeBatches.length, cls: 'stat-brass' },
-      { label: 'Total barang masuk', value: allItems.length, cls: '' },
-      { label: 'Barang sudah kembali', value: returnedItems.length, cls: 'stat-teal' },
-      { label: 'Barang hilang', value: missingItemCount, cls: 'stat-coral' }
+      { label: 'Processing Batches', value: activeBatches.length, cls: 'stat-brass' },
+      { label: 'Total Items In', value: allItems.length, cls: '' },
+      { label: 'Items Returned', value: returnedItems.length, cls: 'stat-teal' },
+      { label: 'Missing Items', value: missingItemCount, cls: 'stat-coral' }
     ];
+    
     els.statGrid.innerHTML = stats.map(s => `
       <div class="stat-card ${s.cls}">
         <div class="stat-value">${s.value}</div>
@@ -491,14 +444,14 @@
 
     // expiry list
     const resolved = batches
-      .filter(b => (b.status === 'selesai_lengkap' || b.status === 'selesai_ada_hilang') && b.completedAt)
+      .filter(b => (b.status === 'completed' || b.status === 'missing_items') && b.completedAt)
       .map(b => ({ b, daysLeft: Math.max(0, Math.ceil(((b.completedAt + settings.retentionDays * 86400000) - Date.now()) / 86400000)) }))
       .sort((a, b) => a.daysLeft - b.daysLeft);
 
     els.expiryList.innerHTML = '';
     resolved.forEach(({ b, daysLeft }) => {
       const li = document.createElement('li');
-      li.innerHTML = `<span class="item-name">${b.code} · ${Utils.escapeHtml(b.laundryName)}</span><span>Terhapus dalam ${daysLeft} hari</span>`;
+      li.innerHTML = `<span class="item-name">${b.code} · ${Utils.escapeHtml(b.laundryName)}</span><span>Deletes in ${daysLeft} days</span>`;
       els.expiryList.appendChild(li);
     });
     els.expiryListEmpty.hidden = resolved.length > 0;
@@ -515,18 +468,18 @@
     Storage.saveSettings(settings);
     renderTicketList();
     renderDashboard();
-    showToast('Pengaturan disimpan.');
+    showToast('Settings saved.');
   });
 
   els.btnExport.addEventListener('click', () => {
     Storage.exportData();
-    showToast('File backup diunduh.');
+    showToast('Backup file downloaded.');
   });
 
   els.fImport.addEventListener('change', () => {
     const file = els.fImport.files[0];
     if (!file) return;
-    if (!confirm('Impor akan menimpa semua data yang ada saat ini. Lanjutkan?')) {
+    if (!confirm('Importing will overwrite all current data. Continue?')) {
       els.fImport.value = '';
       return;
     }
@@ -540,9 +493,9 @@
         renderTicketList();
         renderVerifySelect();
         renderDashboard();
-        showToast(`${count} batch berhasil diimpor.`);
+        showToast(`${count} batches successfully imported.`);
       } catch (err) {
-        showToast('Gagal mengimpor: ' + err.message);
+        showToast('Failed to import: ' + err.message);
       }
       els.fImport.value = '';
     };
@@ -550,7 +503,7 @@
   });
 
   els.btnClearAll.addEventListener('click', () => {
-    if (!confirm('Yakin ingin menghapus SEMUA data laundry secara permanen? Tindakan ini tidak bisa dibatalkan.')) return;
+    if (!confirm('Are you sure you want to permanently wipe ALL laundry data? This cannot be undone.')) return;
     Storage.clearAll();
     batches = [];
     settings = { retentionDays: 7 };
@@ -560,7 +513,7 @@
     renderVerifySelect();
     renderVerifyDetail();
     renderDashboard();
-    showToast('Semua data telah dihapus.');
+    showToast('All data has been cleared.');
   });
 
   // ==================================================
@@ -586,7 +539,7 @@
     renderDashboard();
 
     if (removed > 0) {
-      setTimeout(() => showToast(`${removed} batch lama dihapus otomatis.`), 400);
+      setTimeout(() => showToast(`${removed} old batches were auto-deleted.`), 400);
     }
   }
 
