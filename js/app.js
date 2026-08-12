@@ -61,7 +61,9 @@
     fImport: el('f-import'),
     btnClearAll: el('btn-clear-all'),
 
-    toast: el('toast')
+    toast: el('toast'),
+    
+    // Elements for Modal Zoom
     imageModal: el('image-modal'),
     modalImg: el('modal-img'),
     modalClose: el('modal-close')
@@ -92,12 +94,10 @@
     activeVerifyId = batchId;
     renderVerifyDetail();
   }
-
-// ==================================================
+  
+  // ==================================================
   // IMAGE ZOOM MODAL
   // ==================================================
-  
-  // Menggunakan event delegation pada body agar semua gambar (termasuk yang baru ditambah) bisa diklik
   document.body.addEventListener('click', (e) => {
     if (e.target.classList.contains('item-thumb')) {
       els.modalImg.src = e.target.src;
@@ -105,12 +105,10 @@
     }
   });
 
-  // Tutup saat tombol (X) diklik
   els.modalClose.addEventListener('click', () => {
     els.imageModal.hidden = true;
   });
 
-  // Tutup saat area gelap di luar gambar diklik
   els.imageModal.addEventListener('click', (e) => {
     if (e.target === els.imageModal) {
       els.imageModal.hidden = true;
@@ -128,7 +126,7 @@
     
     els.photoBtnText.textContent = '...';
     try {
-      currentDraftPhoto = await Utils.compressImage(file, 600, 0.7); // Compress to smaller thumbnail size
+      currentDraftPhoto = await Utils.compressImage(file, 600, 0.7);
       els.lblItemPhoto.style.borderColor = 'var(--teal)';
       els.lblItemPhoto.style.color = 'var(--teal)';
       els.photoBtnText.textContent = '✓ OK';
