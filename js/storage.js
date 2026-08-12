@@ -1,18 +1,17 @@
 // storage.js — all localStorage reads/writes live here.
-// Everything is client-side only; nothing leaves the browser.
 
 const Storage = (() => {
-
-  const KEY_BATCHES = 'tiket_batches_v1';
-  const KEY_SETTINGS = 'tiket_settings_v1';
-  const KEY_COUNTER = 'tiket_counter_v1';
+  // Changed storage keys to avoid conflicts with previous version schemas
+  const KEY_BATCHES = 'ticket_batches_v2';
+  const KEY_SETTINGS = 'ticket_settings_v2';
+  const KEY_COUNTER = 'ticket_counter_v2';
 
   function loadBatches() {
     try {
       const raw = localStorage.getItem(KEY_BATCHES);
       return raw ? JSON.parse(raw) : [];
     } catch (e) {
-      console.error('Gagal membaca data batch, mengembalikan array kosong.', e);
+      console.error('Failed to parse batches, returning empty array.', e);
       return [];
     }
   }
@@ -22,7 +21,7 @@ const Storage = (() => {
       localStorage.setItem(KEY_BATCHES, JSON.stringify(batches));
       return true;
     } catch (e) {
-      console.error('Gagal menyimpan data (mungkin localStorage penuh).', e);
+      console.error('Failed to save data (localStorage might be full).', e);
       return false;
     }
   }
@@ -47,17 +46,14 @@ const Storage = (() => {
     return `LDY-${String(n).padStart(4, '0')}`;
   }
 
-  // Auto-delete: only batches with a resolved status (selesai_lengkap /
-  // selesai_ada_hilang) whose completedAt is older than retentionDays are
-  // removed. Batches still "diproses" are never auto-deleted, so an
-  // unresolved missing-item investigation can't silently disappear.
   function runAutoCleanup(batches, retentionDays) {
     const now = Date.now();
     const cutoffMs = retentionDays * 24 * 60 * 60 * 1000;
     const kept = [];
     let removed = 0;
+    
     for (const b of batches) {
-      const isResolved = b.status === 'selesai_lengkap' || b.status === 'selesai_ada_hilang';
+      const isResolved = b.status === 'completed' || b.status === 'missing_items';
       if (isResolved && b.completedAt && (now - b.completedAt) > cutoffMs) {
         removed++;
         continue;
@@ -70,8 +66,8 @@ const Storage = (() => {
   function exportData() {
     const payload = {
       exportedAt: new Date().toISOString(),
-      app: 'tiket-laundry-tracker',
-      version: 1,
+      app: 'ticket-laundry-tracker',
+      version: 2,
       settings: loadSettings(),
       batches: loadBatches()
     };
@@ -80,7 +76,7 @@ const Storage = (() => {
     const a = document.createElement('a');
     const stamp = new Date().toISOString().slice(0, 10);
     a.href = url;
-    a.download = `tiket-laundry-backup-${stamp}.json`;
+    a.download = `ticket-laundry-backup-${stamp}.json`;
     document.body.appendChild(a);
     a.click();
     a.remove();
@@ -90,7 +86,7 @@ const Storage = (() => {
   function importData(jsonText) {
     const data = JSON.parse(jsonText);
     if (!data || !Array.isArray(data.batches)) {
-      throw new Error('Format file tidak dikenali.');
+      throw new Error('Unrecognized file format.');
     }
     saveBatches(data.batches);
     if (data.settings) saveSettings(data.settings);
