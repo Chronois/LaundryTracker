@@ -77,14 +77,21 @@
                 <option value="other">Other</option>
               </select>
               
-              <label class="btn btn-secondary" for="f-item-photo" id="lbl-item-photo">
-                📷 <span id="photo-btn-text">Photo</span>
+              <!-- Tombol Galeri/File -->
+              <label class="btn btn-secondary" for="f-item-photo" id="lbl-item-photo" title="Choose from Gallery">
+                📁 <span id="photo-btn-text">File</span>
               </label>
               <input type="file" id="f-item-photo" accept="image/*" hidden>
+
+              <!-- Tombol Kamera (Langsung buka kamera berkat capture="environment") -->
+              <label class="btn btn-secondary" for="f-item-camera" id="lbl-item-camera" title="Take a Photo">
+                📷
+              </label>
+              <input type="file" id="f-item-camera" accept="image/*" capture="environment" hidden>
               
               <button type="button" id="f-item-add" class="btn btn-primary">+ Add</button>
             </div>
-
+            
             <ul class="item-list" id="item-list"></ul>
             <p class="empty-hint" id="item-list-empty">No items added yet.</p>
           </div>
