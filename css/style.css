@@ -48,7 +48,12 @@ body {
 
 a { color: var(--teal); }
 h1, h2, h3 { font-family: var(--font-display); margin: 0; }
-.app { max-width: 980px; margin: 0 auto; padding: 0 20px 80px; }
+.app { 
+  max-width: 100%; /* Menghapus batas 980px agar full width */
+  width: 100%;
+  margin: 0; 
+  padding: 0 3vw 80px; /* Padding fleksibel menggunakan viewport width */
+}
 
 /* ==================================================
    Topbar
@@ -250,6 +255,11 @@ input[type="date"] { color-scheme: dark; }
   background: var(--surface);
   border: 1px solid var(--border-soft);
   flex-shrink: 0;
+  cursor: zoom-in;
+  transition: opacity 0.2s;
+}
+.item-thumb:hover {
+  opacity: 0.8;
 }
 .item-list li .item-name { flex: 1; }
 
@@ -489,4 +499,59 @@ input[type="date"] { color-scheme: dark; }
 
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }
+}
+
+/* ==================================================
+   Image Zoom Modal
+   ================================================== */
+.modal {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: fixed;
+  z-index: 9999;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(5px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.modal:not([hidden]) {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.modal-content {
+  max-width: 90vw;
+  max-height: 90vh;
+  border-radius: var(--radius-m);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  transform: scale(0.95);
+  transition: transform 0.2s ease;
+  object-fit: contain;
+}
+
+.modal:not([hidden]) .modal-content {
+  transform: scale(1);
+}
+
+.modal-close {
+  position: absolute;
+  top: 20px;
+  right: 30px;
+  color: white;
+  font-size: 40px;
+  font-weight: bold;
+  cursor: pointer;
+  z-index: 10000;
+  user-select: none;
+}
+
+.modal-close:hover {
+  color: var(--teal);
 }
