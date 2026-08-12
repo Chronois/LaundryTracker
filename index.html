@@ -15,18 +15,26 @@
 <div class="app">
 
   <header class="topbar">
-    <div class="brand">
-      <span class="brand-mark">🧺</span>
-      <div class="brand-text">
-        <h1>LaundryTracker</h1>
-        <p>Ensure everything comes back</p>
+    <div class="topbar-top">
+      <div class="brand">
+        <span class="brand-mark">🧺</span>
+        <div class="brand-text">
+          <h1>LaundryTracker</h1>
+          <p>Ensure everything comes back</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button id="btn-retention" class="icon-btn" title="Set Auto-Delete Days">⏳</button>
+        <button id="btn-export" class="icon-btn" title="Export Data">💾</button>
+        <label for="f-import" class="icon-btn" title="Import Data">📂</label>
+        <input type="file" id="f-import" accept="application/json" hidden>
+        <button id="btn-clear-all" class="icon-btn danger-icon" title="Wipe All Data">🗑️</button>
       </div>
     </div>
     <nav class="tabs" id="tabs">
       <button class="tab-btn active" data-tab="batch">Batches</button>
       <button class="tab-btn" data-tab="verify">Verify</button>
       <button class="tab-btn" data-tab="dashboard">Overview</button>
-      <button class="tab-btn" data-tab="data">Settings</button>
     </nav>
   </header>
 
@@ -38,7 +46,6 @@
       <div class="panel-card form-card">
         <div class="panel-card-head">
           <h2 id="batch-form-title">New Batch</h2>
-          <span class="eyebrow">01 — Drop off laundry</span>
         </div>
 
         <form id="batch-form" novalidate>
@@ -77,13 +84,11 @@
                 <option value="other">Other</option>
               </select>
               
-              <!-- Tombol Galeri/File -->
               <label class="btn btn-secondary" for="f-item-photo" id="lbl-item-photo" title="Choose from Gallery">
                 📁 <span id="photo-btn-text">File</span>
               </label>
               <input type="file" id="f-item-photo" accept="image/*" hidden>
 
-              <!-- Tombol Kamera -->
               <label class="btn btn-secondary" for="f-item-camera" id="lbl-item-camera" title="Take a Photo">
                 📷
               </label>
@@ -130,7 +135,6 @@
       <div class="panel-card">
         <div class="panel-card-head">
           <h2>Select batch to verify</h2>
-          <span class="eyebrow">02 — Check returning items</span>
         </div>
         <select id="verify-select" class="select-batch">
           <option value="">— Select a batch —</option>
@@ -167,7 +171,6 @@
       <div class="panel-card">
         <div class="panel-card-head">
           <h2>Overview</h2>
-          <span class="eyebrow">03 — In &amp; out stats</span>
         </div>
         <div class="stat-grid" id="stat-grid"></div>
       </div>
@@ -186,43 +189,6 @@
         </div>
         <ul class="expiry-list" id="expiry-list"></ul>
         <p class="empty-hint" id="expiry-list-empty">No resolved batches pending deletion.</p>
-      </div>
-
-    </section>
-
-    <!-- ============ TAB: DATA ============ -->
-    <section class="tab-panel" id="tab-data">
-
-      <div class="panel-card">
-        <div class="panel-card-head">
-          <h2>Settings</h2>
-          <span class="eyebrow">04 — Local Storage</span>
-        </div>
-        <div class="field">
-          <label for="f-retention">Auto-delete completed batches after (days)</label>
-          <input type="number" id="f-retention" min="1" max="90" value="7">
-        </div>
-        <p class="hint-text">Only <strong>Completed</strong> batches are counted and deleted automatically. Batches still marked as Processing will never be deleted.</p>
-      </div>
-
-      <div class="panel-card">
-        <div class="panel-card-head">
-          <h2>Backup &amp; Restore</h2>
-        </div>
-        <p class="hint-text">All data is stored purely in this browser (localStorage). Export periodically to prevent loss when clearing cache.</p>
-        <div class="form-actions form-actions-split">
-          <button class="btn btn-secondary" id="btn-export">Export Data (.json)</button>
-          <label class="btn btn-secondary" for="f-import">Import Data (.json)</label>
-          <input type="file" id="f-import" accept="application/json" hidden>
-        </div>
-      </div>
-
-      <div class="panel-card panel-card-danger">
-        <div class="panel-card-head">
-          <h2>Wipe All Data</h2>
-        </div>
-        <p class="hint-text">Permanently deletes all batches, items, and photos from this browser.</p>
-        <button class="btn btn-danger" id="btn-clear-all">Clear All Data</button>
       </div>
 
     </section>
